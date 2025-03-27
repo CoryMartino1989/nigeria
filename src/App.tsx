@@ -1,41 +1,22 @@
 
 import {
-  ConnectButton,
   ThirdwebProvider,
-  useActiveWallet,
-  useActiveClaimCondition,
-  useClaimedNFTSupply,
-  useNFTContract,
-  useClaimNFT,
-  useTotalCount,
-} from "thirdweb/react";
-import { createThirdwebClient } from "thirdweb";
-import { sei } from "thirdweb/chains";
+  useContract,
+  useContractMetadata,
+  useAddress,
+  useMetamask,
+  Web3Button,
+} from "@thirdweb-dev/react";
+import { ChainId } from "@thirdweb-dev/sdk";
 import "./index.css";
-
-const client = createThirdwebClient({
-  clientId: "9db4f27b3ff418eb08e209f9d863cce7",
-});
 
 const contractAddress = "0x00aD629685845FCfbEd45b8946bd7eC77aE2A003";
 
 function MintPage() {
-  const wallet = useActiveWallet();
-  const { contract } = useNFTContract({ client, chain: sei, address: contractAddress });
-  const { data: claimCondition } = useActiveClaimCondition({ contract });
-  const { data: claimed } = useClaimedNFTSupply({ contract });
-  const { data: total } = useTotalCount({ contract });
-  const { mutateAsync: claimNFT, isPending } = useClaimNFT({ contract });
-
-  const handleMint = async () => {
-    if (!wallet) return;
-    const ownedNFTs = await contract?.erc721.getOwned(wallet.address);
-    if (ownedNFTs && ownedNFTs.length > 0) {
-      alert("You already claimed your UFO!");
-      return;
-    }
-    await claimNFT({ quantity: 1 });
-  };
+  const address = useAddress();
+  const connect = useMetamask();
+  const { contract } = useContract(contractAddress, "nft-drop");
+  const { data: metadata } = useContractMetadata(contract);
 
   return (
     <div className="mint-container">
@@ -44,15 +25,31 @@ function MintPage() {
         Introducing Exclusive, playable Nigeria UFO Karts.<br />
         <a href="https://astrokarts.io/game/" target="_blank" rel="noreferrer">Play Now</a>
       </p>
-      <img src="/logo.png" alt="NFT" className="nft-preview" />
-      <p>
-        {claimed?.toString() || 0} / {total?.toString() || 0} minted
-      </p>
-      <ConnectButton client={client} chain={sei} />
-      {wallet && (
-        <button onClick={handleMint} disabled={isPending}>
-          {isPending ? "Minting..." : "Mint Nigeria UFO"}
-        </button>
+
+      {metadata?.image && (
+        <img
+          src={metadata.image.replace("ipfs://", "https://ipfs.io/ipfs/")}
+          alt="NFT"
+          className="nft-preview"
+        />
+      )}
+
+      {!address ? (
+        <button onClick={connect}>Connect Wallet</button>
+      ) : (
+        <Web3Button
+          contractAddress={contractAddress}
+          action={async (contract) => {
+            const owned = await contract.erc721.getOwned(address);
+            if (owned.length > 0) {
+              alert("You already claimed your Nigeria UFO!");
+              return;
+            }
+            await contract.erc721.claim(1);
+          }}
+        >
+          Mint Nigeria UFO
+        </Web3Button>
       )}
     </div>
   );
@@ -60,7 +57,7 @@ function MintPage() {
 
 export default function App() {
   return (
-    <ThirdwebProvider client={client} activeChain={sei}>
+    <ThirdwebProvider activeChain="sei" clientId="9db4f27b3ff418eb08e209f9d863cce7">
       <MintPage />
     </ThirdwebProvider>
   );
