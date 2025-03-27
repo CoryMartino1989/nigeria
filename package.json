@@ -1,5 +1,5 @@
 {
-  "name": "nigeria-ufo-mint-starter",
+  "name": "nigeria-ufo-mint-final",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -10,7 +10,8 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "thirdweb": "^3.0.11"
+    "@thirdweb-dev/react": "^3.10.22",
+    "@thirdweb-dev/sdk": "^3.10.22"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.0.0",
